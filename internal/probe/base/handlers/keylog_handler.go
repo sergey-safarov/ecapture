@@ -109,13 +109,18 @@ func (h *KeylogHandler) Handle(event domain.Event) error {
 	if ok {
 		version := msEvent.GetVersion()
 
-		// TLS 1.2 and earlier use CLIENT_RANDOM format
-		if version <= 0x0303 { // TLS 1.2 = 0x0303
+		// TLS/DTLS 1.2 and earlier use CLIENT_RANDOM format
+		if UsesMasterSecretKeylog(version) {
 			return h.handleTLS12(msEvent)
 		}
 
-		// TLS 1.3 uses multiple secret types
-		return h.handleTLS13(msEvent)
+		// TLS/DTLS 1.3 uses multiple secret types
+		if UsesTLS13Keylog(version) {
+			return h.handleTLS13(msEvent)
+		}
+
+		return errors.New(errors.ErrCodeEventValidation,
+			fmt.Sprintf("unsupported SSL version for keylog: 0x%04x", version))
 	}
 
 	// event is not a master secret event

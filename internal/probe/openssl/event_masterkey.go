@@ -125,15 +125,7 @@ func (e *MasterSecretEvent) DecodeFromBytes(data []byte) error {
 
 // String returns a human-readable representation of the master secret event.
 func (e *MasterSecretEvent) String() string {
-	var versionStr string
-	switch e.Version {
-	case 0x0303:
-		versionStr = "TLS 1.2"
-	case 0x0304:
-		versionStr = "TLS 1.3"
-	default:
-		versionStr = fmt.Sprintf("0x%04x", e.Version)
-	}
+	versionStr := handlers.SSLVersionString(e.Version)
 
 	return fmt.Sprintf("TLS Version: %s, ClientRandom: %x",
 		versionStr,
@@ -169,8 +161,7 @@ func (e *MasterSecretEvent) UUID() string {
 
 // Validate checks if the event data is valid.
 func (e *MasterSecretEvent) Validate() error {
-	// Check version is valid (TLS 1.0 to 1.3)
-	if e.Version < 0x0301 || e.Version > 0x0304 {
+	if !handlers.IsValidSSLVersion(e.Version) {
 		return errors.New(errors.ErrCodeEventValidation,
 			fmt.Sprintf("invalid TLS version: 0x%04x", e.Version))
 	}

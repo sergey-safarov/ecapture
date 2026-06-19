@@ -15,3 +15,8 @@
 #define TLS1_2_VERSION 0x0303
 #define TLS1_3_VERSION 0x0304
 
+/* DTLS version numbers (RFC 6347, RFC 9147) */
+#define DTLS1_VERSION 0xFEFF
+#define DTLS1_2_VERSION 0xFEFD
+#define DTLS1_3_VERSION 0xFEFC
+
