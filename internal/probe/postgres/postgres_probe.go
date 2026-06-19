@@ -30,6 +30,7 @@ import (
 	"github.com/gojue/ecapture/internal/domain"
 	"github.com/gojue/ecapture/internal/errors"
 	"github.com/gojue/ecapture/internal/probe/base"
+	pkgebpf "github.com/gojue/ecapture/pkg/util/ebpf"
 	"github.com/gojue/ecapture/pkg/util/kernel"
 )
 
@@ -171,7 +172,12 @@ func (p *Probe) setupManager() error {
 func (p *Probe) loadBytecode() ([]byte, error) {
 	// Determine which bytecode file to use based on BTF support
 	var bytecodeFile string
-	if p.config.GetBTF() == 1 { // BTFModeCore
+	useCore, err := pkgebpf.UseCoreBTF(p.config.GetBTF())
+	if err != nil {
+		p.Logger().Warn().Err(err).Msg("invalid BTF mode, falling back to non-core bytecode")
+		useCore = false
+	}
+	if useCore {
 		bytecodeFile = "bytecode/postgres_kern_core.o"
 	} else {
 		bytecodeFile = "bytecode/postgres_kern.o"

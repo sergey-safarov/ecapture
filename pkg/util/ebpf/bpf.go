@@ -19,6 +19,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gojue/ecapture/internal/config"
+
 	"golang.org/x/sys/unix"
 )
 
@@ -140,6 +142,21 @@ func IsEnableBTF() (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+// UseCoreBTF resolves whether to load CO-RE (_core.o) or non-CO-RE (_noncore.o)
+// bytecode for the given BTF mode (0=auto, 1=core, 2=non-core).
+func UseCoreBTF(mode uint8) (bool, error) {
+	switch mode {
+	case config.BTFModeCore:
+		return true, nil
+	case config.BTFModeNonCore:
+		return false, nil
+	case config.BTFModeAutoDetect:
+		return IsEnableBTF()
+	default:
+		return false, fmt.Errorf("invalid btf mode: %d", mode)
+	}
 }
 
 // IsEnableBPF check BPF CONFIG

@@ -31,9 +31,11 @@ import (
 
 	"github.com/gojue/ecapture/internal/events"
 
+	"github.com/gojue/ecapture/internal/config"
 	"github.com/gojue/ecapture/internal/domain"
 	"github.com/gojue/ecapture/internal/errors"
 	"github.com/gojue/ecapture/internal/logger"
+	pkgebpf "github.com/gojue/ecapture/pkg/util/ebpf"
 )
 
 const (
@@ -159,8 +161,15 @@ func (p *BaseProbe) Stop(ctx context.Context) error {
 
 // GetBPFName returns the appropriate eBPF bytecode filename.
 func (p *BaseProbe) GetBPFName(baseName string) string {
-	// Determine if we should use core or non-core bytecode
-	useCoreMode := p.config.GetBTF() == 1 // BTFModeCore
+	useCoreMode, err := pkgebpf.UseCoreBTF(p.config.GetBTF())
+	if err != nil {
+		if p.logger != nil {
+			p.logger.Warn().Err(err).Msg("invalid BTF mode, falling back to non-core bytecode")
+		}
+		useCoreMode = false
+	} else if p.config.GetBTF() == config.BTFModeAutoDetect && p.logger != nil {
+		p.logger.Info().Bool("btf_core", useCoreMode).Msg("auto-detected BTF mode for eBPF bytecode")
+	}
 
 	// Replace .o extension
 	if useCoreMode {

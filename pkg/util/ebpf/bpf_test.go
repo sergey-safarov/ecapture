@@ -16,6 +16,8 @@ package ebpf
 
 import (
 	"testing"
+
+	"github.com/gojue/ecapture/internal/config"
 )
 
 // TestIsContainerCgroup is a test for isContainerCgroup
@@ -107,6 +109,23 @@ func TestIsContainerCgroup(t *testing.T) {
 		t.Logf("TestIsContainerCgroup :: IsContainer true")
 	} else {
 		t.Logf("TestIsContainerCgroup :: IsContainer false")
+	}
+}
+
+func TestUseCoreBTF(t *testing.T) {
+	core, err := UseCoreBTF(config.BTFModeCore)
+	if err != nil || !core {
+		t.Fatalf("BTFModeCore: got core=%v err=%v", core, err)
+	}
+
+	noncore, err := UseCoreBTF(config.BTFModeNonCore)
+	if err != nil || noncore {
+		t.Fatalf("BTFModeNonCore: got core=%v err=%v", noncore, err)
+	}
+
+	_, err = UseCoreBTF(99)
+	if err == nil {
+		t.Fatal("expected error for invalid BTF mode")
 	}
 }
 
